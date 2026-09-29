@@ -1,135 +1,89 @@
-# NextFlutter App
+# NextFlutter E-commerce App
 
-Application Flutter complète connectée à une véritable backend avec architecture propre.
+A complete e-commerce Flutter application using **Riverpod** as the exclusive state management solution.
 
 ## Architecture
 
-Ce projet suit l'architecture **Clean Architecture** avec trois couches :
+The application follows a clean separation of concerns with three layers:
 
-- **domain** : Entités et cas d'usage (use cases) de l'application
-- **data** : Répositories, sources de données (remote + local) et modèles
-- **presentation** : Fournisseurs (Providers) et écrans UI
+### Data Layer
+- Product model (`lib/features/products/domain/model/product_model.dart`)
+- Mock product data (`kProducts`)
+- Local storage (Hive ready)
 
-### Couche Domain (`lib/domain/`)
-- **Entities** : Modèles de données pures (`MovieEntity`)
-- **Use Cases** : Cas d'usage qui contiennent la logique métier
-  - `GetPopularMovies` - Récupère les films populaires
-  - `GetMovieDetails` - Récupère les détails d'un film
-  - `UserLogin` - Connexion utilisateur
-  - `UserRegister` - Inscription utilisateur
-  - `UserLogout` - Déconnexion utilisateur
-  - `CheckAuthStatus` - Vérifie l'état d'authentification
+### Business Logic Layer (Riverpod)
+7 exclusive providers managing all app state:
 
-### Couche Data (`lib/data/`)
-- **Repositories** : Abstraction entre la couche présentation et données
-  - `MovieRepository` - Interface pour les données movies
-  - `AuthRepository` - Interface pour les données d'authentification
-- **Datasources** : Sources de données concrètes
-  - `MovieRemoteDatasource` - API calls via Dio (`/movie/popular`)
-  - `AuthRemoteDatasource` - Authentification via API (`/auth/login`, `/auth/register`)
-  - `AuthLocalDatasource` - Stockage local avec Hive
-  - `HiveAuthDatasource` - Wrapper Hive implémentant AuthDatasource
-- **Models** : Modèles de données avec conversion JSON
-  - `MovieModel` - Modèle pour les données movies
-  - `AuthCredentialsModel` - Modèle credentials login/register
+1. **`productListProvider`** - `StateProvider.autoDispose` containing the mock product list
+2. **`filterProvider`** - `StateProvider` for category, price range, sort criteria
+3. **`filteredProductsProvider`** - `Provider.family` combining filters + search
+4. **`cartProvider`** - `StateNotifierProvider<CartNotifier, CartState>` with add/remove/setQuantity
+5. **`favoritesProvider`** - `StateNotifierProvider<FavoriteNotifier, Set<int>>` for toggle favorite
+6. **`userProfileProvider`** - `StateProvider` with user profile data
+7. **`searchQueryProvider`** - `StateProvider` for search query text
 
-### Couche Presentation (`lib/presentation/`)
-- **Providers** : Gestion d'état avec `ChangeNotifier` + `Provider`
-  - `AuthProvider` - Gère l'état d'authentification, token, login/logout
-  - `MovieProvider` - Gère la liste des films avec chargement asynchrone
-- **Screens** : Interfaces utilisateur
-  - `LoginScreen` - Formulaire de connexion avec validation
-  - `RegisterScreen` - Formulaire d'inscription
-  - `HomeScreen` - Écran principal avec grille de films
+### Presentation Layer
+- Product list screen with filtering UI (categories, price range, sort by/rating)
+- Product detail screen
+- Cart screen with item management (add/remove/quantity)
+- Favorites screen
+- Profile screen with avatar and info rows
 
-## API Utilisée
+## State Management
 
-- **Movie API** : Point d'extrémité `/movie/popular` pour récupérer les films populaires
-- **Auth API** : Points d'extrémité `/auth/login`, `/auth/register`, `/auth/me`, `/auth/logout`
-- Toutes les réponses sont au format JSON
+All state is managed exclusively with Riverpod:
 
-## Configuration du projet
+- `StateProvider` for simple state (user profile, search query)
+- `StateProvider.autoDispose` for ephemeral state (product list)
+- `StateNotifierProvider` + `StateNotifier` for complex state (cart, favorites)
+- `Provider.family` for computed/filtered data
 
-### Prérequis
+## Features
 
-- Flutter SDK (version 3.47.2 ou supérieure)
-- Dart SDK (version 3.13.2 ou supérieure)
+- Product catalog with filtering (category, price range)
+- Sorting by name/price (ascending/descending)
+- Shopping cart with quantity management
+- Favorites toggle persistence
+- Light/dark theme support
+- User profile display
 
-### Étapes d'installation
+## Project Structure
 
-1. **Cloner le dépôt**
-   ```bash
-   git clone https://github.com/JTECH07/nextflutter_app.git
-   cd nextflutter_app
-   ```
-
-2. **Installer les dépendances**
-   ```bash
-   flutter pub get
-   ```
-
-3. **Configuration Hive (stockage local)**
-   Le projet utilise Hive pour le stockage local des tokens d'authentification. Aucune configuration supplémentaire n'est requise - Hive est initialisé automatiquement au démarrage.
-
-4. **Lancer l'application**
-   ```bash
-   flutter run
-   ```
-
-   ou pour le web :
-   ```bash
-   flutter build web
-   ```
-
-### Structure des dépendances
-
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-  cupertino_icons: ^1.0.8
-  
-  # API et networking
-  dio: ^5.4.0
-  connectivity_plus: ^6.0.3
-  
-  # Local caching
-  hive: ^2.2.3
-  hive_flutter: ^1.1.0
-  
-  # State management
-  provider: ^6.0.5
-
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  
-  # Build runners pour Hive
-  build_runner: ^2.4.8
-  hive_generator: ^2.0.1
-  
-  lint: ^2.1.0
-  flutter_lints: ^6.0.0
+```
+lib/
+├── core/
+│   ├── theme/app_theme.dart      # Light/dark ColorScheme
+│   └── widgets/                  # Reusable widgets
+├── features/
+│   ├── products/
+│   │   ├── domain/               # Product model
+│   │   ├── providers/            # 7 Riverpod providers
+│   │   └── presentation/         # Screens
+│   ├── cart/                     # Cart screen
+│   ├── favorites/                # Favorites screen
+│   └── profile/                  # Profile screen
+└── main.dart                     # App entry point
 ```
 
-## Fonctionnalités
+## Getting Started
 
-- **Authentification** : Connexion/inscription/déconnexion avec gestion de token JWT
-- **Mode hors ligne** : Affichage des données mises en cache lorsque le réseau est indisponible
-- **Mise en cache locale** : Stockage des tokens avec Hive
-- **Gestion d'erreurs** : Messages utilisateur pour les échecs réseau
-- **3 écrans** : Login, Register, Home avec grille de films
-- **Architecture propre** : Ségrégation des préoccupations (domain/data/presentation)
+```bash
+flutter pub get
+flutter run
+```
 
-## Plateformes supportées
+or build for web:
 
-- Android
-- iOS
-- Web
-- Linux
-- macOS
-- Windows
+```bash
+flutter build web
+```
 
-## Contact
+## Dependencies
 
-Projet créé dans le cadre de la validation des compétences en API, architecture et persistance.
+Key dependencies in `pubspec.yaml`:
+- `riverpod: ^2.4.0` - State management
+- `riverpod_generator: ^2.4.0` - Code generator
+- `dio: ^5.4.0` - HTTP client (API ready)
+- `connectivity_plus: ^6.0.3` - Connectivity monitoring
+- `provider: ^6.0.5` - Additional provider support
+- `hive: ^2.2.3` + `hive_flutter: ^1.1.0` - Local storage
